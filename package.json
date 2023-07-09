@@ -13,9 +13,14 @@
     "keywords": [],
     "license": "ISC",
     "devDependencies": {
-        "nodemon": "^2.0.16"
+        "@types/node": "^20.4.1",
+        "@types/uuid": "^9.0.2",
+        "@types/ws": "^8.5.5",
+        "nodemon": "^2.0.22",
+        "ts-node": "^10.9.1",
+        "uuid": "^9.0.0"
     },
     "dependencies": {
-        "ws": "^8.8.0"
+        "ws": "^8.13.0"
     }
 }
