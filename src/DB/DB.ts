@@ -23,7 +23,7 @@ class Database {
 
   toggleActivePlayer(index: number, state: boolean) {
     const player = this.players.find((player) => player.index === index);
-    if (!player) throw Error(errors.ERR_USER_DOES_NOT_EXIST);
+    if (!player) throw Error(errors.EXIST_USER_ERROR);
     player.active = state;
   }
 
@@ -42,7 +42,7 @@ class Database {
 
   getPlayerByName(name: string) {
     const player = this.players.find((player) => player.name === name);
-    if (!player) throw Error(errors.ERR_USER_DOES_NOT_EXIST);
+    if (!player) throw Error(errors.EXIST_USER_ERROR);
     return player;
   }
 

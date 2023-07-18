@@ -16,17 +16,17 @@ export const registrationUser = async (
   try {
     const player = db.getPlayerByName(name);
     if (player.active) {
-      throw Error(errors.ERR_USER_IS_ALREADY_LOGGED_IN);
+      throw Error(errors.USERNAME_ERROR);
     }
 
     if (player.password !== password) {
-      throw Error(errors.ERR_INCORRECT_PASSWORD);
+      throw Error(errors.INVALID_PASSWORD);
     }
     db.toggleActivePlayer(player.index, true);
     db.updatePlayerIndex(name, index);
   } catch (e) {
     if (e instanceof Error) {
-      if (e.message === errors.ERR_USER_DOES_NOT_EXIST) {
+      if (e.message === errors.EXIST_USER_ERROR) {
         db.addPlayer({ name, password, index, isBot: false });
       } else {
         error = true;

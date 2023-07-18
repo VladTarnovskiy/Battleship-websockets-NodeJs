@@ -1,19 +1,16 @@
 import { httpServer } from "./src/http_server/index";
 import { WebSocketServer, createWebSocketStream } from "ws";
-// import { v4 as uuid } from "uuid";
 import { RequestBody } from "./src/interfaces/interfaces";
 import {
   createGame,
   registrationUser,
   startGame,
   updateRoom,
-  // attack,
 } from "./src/actions/index";
 
 import {
   getUpdateWinnersData,
   getTurnData,
-  // getFinishData,
   getUpdateRoomData,
   createResponse,
   getCreateGameData,
@@ -22,7 +19,7 @@ import {
 import { WebSocket } from "ws";
 import db from "./src/DB/DB";
 
-class WebSocketWithId extends WebSocket {
+class MyWebSocket extends WebSocket {
   id = Math.floor(Math.random() * 1000);
 }
 
@@ -32,8 +29,8 @@ const WS_PORT = 3000;
 console.log(`Start static http server on the ${HTTP_PORT} port!`);
 httpServer.listen(HTTP_PORT);
 
-const wss = new WebSocketServer(
-  { host: "localhost", port: WS_PORT, WebSocket: WebSocketWithId },
+const wsServer = new WebSocketServer(
+  { host: "localhost", port: WS_PORT, WebSocket: MyWebSocket },
   () => {
     console.log(`Websocket is connected to ${WS_PORT} port`);
   }
@@ -41,7 +38,7 @@ const wss = new WebSocketServer(
 
 let finished = false;
 
-wss.on("connection", async (ws) => {
+wsServer.on("connection", async (ws) => {
   const messageStream = createWebSocketStream(ws, { decodeStrings: false });
 
   console.log(`New WS client ${ws.id}`);
@@ -59,7 +56,7 @@ wss.on("connection", async (ws) => {
       );
     } else if (type === "create_room") {
       const responseBody = await updateRoom(ws.id);
-      wss.clients.forEach((client) => {
+      wsServer.clients.forEach((client) => {
         client.send(JSON.stringify(responseBody));
       });
     } else if (type === "add_user_to_room") {
@@ -69,7 +66,7 @@ wss.on("connection", async (ws) => {
         const room = db.getRoomByRoomId(roomId);
         if (room && room.roomUsers.length === 2) {
           db.deleteRoom(roomId);
-          wss.clients.forEach((client) => {
+          wsServer.clients.forEach((client) => {
             client.send(
               JSON.stringify(createResponse("update_room", getUpdateRoomData()))
             );
@@ -92,7 +89,7 @@ wss.on("connection", async (ws) => {
         const currentGame = db.getActiveGameByPlayerIndex(ws.id);
         if (!currentGame) return;
 
-        wss.clients.forEach((client) => {
+        wsServer.clients.forEach((client) => {
           if (
             currentGame.players.some((player) => player.index === client.id)
           ) {
@@ -110,40 +107,12 @@ wss.on("connection", async (ws) => {
 
         counter = 0;
       }
-    } else if (type === "attack") {
-      // const responseBody = await attack(requestbody);
-      // if (!responseBody) return;
-      // const currentGame = db.getActiveGameByPlayerIndex(ws.id);
-      // if (!currentGame) return;
-      // wss.clients.forEach((client) => {
-      //   if (currentGame.players.some((player) => player.index === client.id)) {
-      //     responseBody.forEach((item) => {
-      //       client.send(JSON.stringify(item));
-      //     });
-      //     if (currentGame.finished) {
-      //       client.send(
-      //         JSON.stringify(
-      //           createResponse("finish", getFinishData(currentGame.turn))
-      //         )
-      //       );
-      //     } else {
-      //       client.send(
-      //         JSON.stringify(
-      //           createResponse("turn", getTurnData(currentGame.turn))
-      //         )
-      //       );
-      //     }
-      //   }
-      // });
-      // if (currentGame.finished) {
-      //   finished = true;
-      //   db.deleteActiveGame(currentGame);
-      // }
     } else {
       console.log(`Invalid request!`);
     }
+
     if (finished) {
-      wss.clients.forEach((client) => {
+      wsServer.clients.forEach((client) => {
         client.send(
           JSON.stringify(
             createResponse("update_winners", getUpdateWinnersData())
@@ -157,7 +126,7 @@ wss.on("connection", async (ws) => {
   ws.on("close", () => {
     db.deleteRoom(ws.id);
     db.toggleActivePlayer(ws.id, false);
-    wss.clients.forEach((client) => {
+    wsServer.clients.forEach((client) => {
       client.send(
         JSON.stringify(createResponse("update_room", getUpdateRoomData()))
       );

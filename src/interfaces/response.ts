@@ -10,7 +10,6 @@ export type ResData =
   | ResRegData
   | ResUpdateRoomData
   | ResUpdateWinnersData
-  | ResUpdateRoomData
   | ResCreateGameData
   | ResStartGameData
   | ResAttackData
