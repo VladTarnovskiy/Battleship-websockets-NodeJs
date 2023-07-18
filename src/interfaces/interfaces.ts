@@ -13,10 +13,6 @@ export type ResRegData = {
   errorText: string;
 };
 
-export interface MyWebSocket extends WebSocket {
-  id: string;
-}
-
 export interface Player {
   name: string;
   password: string;
