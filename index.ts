@@ -6,6 +6,7 @@ import {
   registrationUser,
   startGame,
   updateRoom,
+  attack,
 } from "./src/actions/index";
 
 import {
@@ -15,16 +16,18 @@ import {
   createResponse,
   getCreateGameData,
   checkGameShipsCounter,
+  getFinishData,
 } from "./src/utils/index";
 import { WebSocket } from "ws";
 import db from "./src/DB/DB";
+import "dotenv/config";
 
 class MyWebSocket extends WebSocket {
   id = Math.floor(Math.random() * 1000);
 }
 
-const HTTP_PORT = 8181;
-const WS_PORT = 3000;
+const HTTP_PORT = Number(process.env.HTTP_PORT) ?? 8181;
+const WS_PORT = Number(process.env.WS_PORT) ?? 3000;
 
 console.log(`Start static http server on the ${HTTP_PORT} port!`);
 httpServer.listen(HTTP_PORT);
@@ -106,6 +109,35 @@ wsServer.on("connection", async (ws) => {
         });
 
         counter = 0;
+      }
+    } else if (type === "attack") {
+      const responseBody = await attack(requestbody);
+      if (!responseBody) return;
+      const currentGame = db.getActiveGameByPlayerIndex(ws.id);
+      if (!currentGame) return;
+      wsServer.clients.forEach((client) => {
+        if (currentGame.players.some((player) => player.index === client.id)) {
+          responseBody.forEach((item) => {
+            client.send(JSON.stringify(item));
+          });
+          if (currentGame.finished) {
+            client.send(
+              JSON.stringify(
+                createResponse("finish", getFinishData(currentGame.turn))
+              )
+            );
+          } else {
+            client.send(
+              JSON.stringify(
+                createResponse("turn", getTurnData(currentGame.turn))
+              )
+            );
+          }
+        }
+      });
+      if (currentGame.finished) {
+        finished = true;
+        db.deleteActiveGame(currentGame);
       }
     } else {
       console.log(`Invalid request!`);

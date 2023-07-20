@@ -7,6 +7,10 @@ import type {
 } from "../interfaces/response";
 import db from "../DB/DB";
 
+export const getFinishData = (winPlayer: number): ResFinishData => ({
+  winPlayer,
+});
+
 export const getTurnData = (currentPlayer: number): ResTurnData => ({
   currentPlayer,
 });
