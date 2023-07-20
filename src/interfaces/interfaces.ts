@@ -1,5 +1,13 @@
 import { WebSocket } from "ws";
 
+export const enum RequestType {
+  REGISTRATION = "reg",
+  CREATE_ROOM = "create_room",
+  ADD_TO_ROOM = "add_user_to_room",
+  ADD_SHIPS = "add_ships",
+  ATTACK = "attack",
+}
+
 export type RequestBody = {
   type: string;
   data: string;

@@ -1,6 +1,6 @@
 import { httpServer } from "./src/http_server/index";
 import { WebSocketServer, createWebSocketStream } from "ws";
-import { RequestBody } from "./src/interfaces/interfaces";
+import { RequestBody, RequestType } from "./src/interfaces/interfaces";
 import {
   createGame,
   registrationUser,
@@ -48,7 +48,7 @@ wsServer.on("connection", async (ws) => {
   messageStream.on("data", async (chunk) => {
     const requestbody: RequestBody = JSON.parse(chunk);
     const { type } = requestbody;
-    if (type === "reg") {
+    if (type === RequestType.REGISTRATION) {
       const responseBody = await registrationUser(requestbody, ws.id);
       messageStream.write(JSON.stringify(responseBody));
       messageStream.write(
@@ -57,12 +57,12 @@ wsServer.on("connection", async (ws) => {
       messageStream.write(
         JSON.stringify(createResponse("update_winners", getUpdateWinnersData()))
       );
-    } else if (type === "create_room") {
+    } else if (type === RequestType.CREATE_ROOM) {
       const responseBody = await updateRoom(ws.id);
       wsServer.clients.forEach((client) => {
         client.send(JSON.stringify(responseBody));
       });
-    } else if (type === "add_user_to_room") {
+    } else if (type === RequestType.ADD_TO_ROOM) {
       const responseBody = await createGame(requestbody, ws.id);
       if (responseBody) {
         const roomId = Number(responseBody.data);
@@ -82,7 +82,7 @@ wsServer.on("connection", async (ws) => {
           });
         }
       }
-    } else if (type === "add_ships") {
+    } else if (type === RequestType.ADD_SHIPS) {
       const sentShipsCounter = checkGameShipsCounter(requestbody);
       if (sentShipsCounter === 2) {
         const responseBody = startGame(requestbody, ws.id);
@@ -110,7 +110,7 @@ wsServer.on("connection", async (ws) => {
 
         counter = 0;
       }
-    } else if (type === "attack") {
+    } else if (type === RequestType.ATTACK) {
       const responseBody = await attack(requestbody);
       if (!responseBody) return;
       const currentGame = db.getActiveGameByPlayerIndex(ws.id);
